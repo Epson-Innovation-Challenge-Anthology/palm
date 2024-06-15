@@ -85,6 +85,11 @@ class UserFields:
         description="사용자 소셜 미디어 링크",
         json_schema_extra={"example": ["https://www.instagram.com/cocopalm/"]},
     )
+    bio = Field(
+        default=None,
+        description="사용자 소개 문구",
+        json_schema_extra={"example": "코코팜 맛있다."},
+    )
 
 
 class AuthFields:
@@ -150,6 +155,7 @@ class UserModel(BaseModel):
     bio_links: list[str] = UserFields.bio_links
     sex: Optional[Sex] = UserFields.sex
     profile_image_url: str | None = UserFields.profile_image_url
+    bio: str | None = UserFields.bio
 
     @field_validator("id", mode="before")
     def validate_id(cls, v):
@@ -183,3 +189,4 @@ class UserInfo(BaseModel):
     bio_links: list[str] = UserFields.bio_links
     sex: Optional[Sex] = UserFields.sex
     profile_image_url: str | None = UserFields.profile_image_url
+    bio: str | None = UserFields.bio
