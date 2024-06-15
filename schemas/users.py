@@ -14,7 +14,11 @@ class UserFields:
     user_id = Field(
         default_factory=generate_hash,
         description="기본으로 생성되는 사용자 ID",
-        json_schema_extra={"example": "ax10eab"},
+        json_schema_extra={
+            "example": "6qerhu4sd1vt1bh3",
+        },
+        min_length=8,
+        max_length=16,
     )
     auth_provider = Field(
         description="사용자 인증 제공자",
@@ -25,10 +29,10 @@ class UserFields:
     email = Field(
         description="사용자 이메일", json_schema_extra={"example": "cocopalm@gmail.com"}
     )
-    email_newsfeed = Field(
+    service_email = Field(
         default=None,
-        description="사용자가 뉴스레터를 구독하기위한 이메일",
-        json_schema_extra={"example": "newsfeed@gmail.com"},
+        description="사용자가 서비스에 사용할 이메일, 가입 직후 email과 동일",
+        json_schema_extra={"example": "cocopalm@gmail.com"},
     )
     is_active = Field(
         default=True,
@@ -46,7 +50,7 @@ class UserFields:
         json_schema_extra={"example": "2099-08-17 19:00:00.000000"},
     )
     created_at = Field(
-        default_factory=datetime.utcnow,
+        default_factory=datetime.now,
         description="사용자 생성 시점",
         json_schema_extra={"example": "2021-08-17 19:00:00.000000"},
     )
@@ -80,7 +84,7 @@ class UserFields:
         description="이벤트관련 이메일 허용 여부",
         json_schema_extra={"example": False},
     )
-    bio_links = Field(
+    urls = Field(
         default=[],
         description="사용자 소셜 미디어 링크",
         json_schema_extra={"example": ["https://www.instagram.com/cocopalm/"]},
@@ -95,7 +99,7 @@ class UserFields:
 class AuthFields:
     user_id = Field(
         description="사용자 ID",
-        json_schema_extra={"example": "ax10eab"},
+        json_schema_extra={"example": "6qerhu4sd1vt1bh3"},
         default=None,
     )
     grant_type = Field(
@@ -152,13 +156,19 @@ class UserModel(BaseModel):
     deactivated_at: Optional[datetime] = UserFields.deactivated_at
     created_at: datetime = UserFields.created_at
     updated_at: datetime | None = UserFields.updated_at
-    bio_links: list[str] = UserFields.bio_links
+    urls: list[str] = UserFields.urls
     sex: Optional[Sex] = UserFields.sex
     profile_image_url: str | None = UserFields.profile_image_url
     bio: str | None = UserFields.bio
 
     @field_validator("id", mode="before")
     def validate_id(cls, v):
+        if v is None:
+            raise ValueError("고유식별값은 필수 입력값입니다.")
+        if len(v) < 8:
+            raise ValueError("고유식별값은 최소 8자리 이상 입력해주세요.")
+        if len(v) > 17:
+            raise ValueError("고유식별값은 최대 16자리 이하로 입력해주세요.")
         return str(v)
 
     @field_validator("deactivated_at", mode="before")
