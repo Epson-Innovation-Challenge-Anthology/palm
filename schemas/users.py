@@ -12,13 +12,14 @@ __all__ = ("UserFields",)
 
 class UserFields:
     user_id = Field(
-        default_factory=generate_hash,
         description="기본으로 생성되는 사용자 ID",
         json_schema_extra={
             "example": "6qerhu4sd1vt1bh3",
         },
         min_length=8,
         max_length=16,
+        default_factory=generate_hash,
+        pattern="^[a-zA-Z0-9]*$",
     )
     auth_provider = Field(
         description="사용자 인증 제공자",
@@ -27,12 +28,15 @@ class UserFields:
         ],
     )
     email = Field(
-        description="사용자 이메일", json_schema_extra={"example": "cocopalm@gmail.com"}
+        description="사용자 이메일",
+        json_schema_extra={"example": "cocopalm@gmail.com"},
     )
     service_email = Field(
         default=None,
         description="사용자가 서비스에 사용할 이메일, 가입 직후 email과 동일",
         json_schema_extra={"example": "cocopalm@gmail.com"},
+        min_length=5,
+        pattern=r"^([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)$",
     )
     is_active = Field(
         default=True,
@@ -68,6 +72,7 @@ class UserFields:
         default=None,
         description="사용자 이름",
         json_schema_extra={"example": "코코팜"},
+        max_length=16,
     )
     profile_image_url = Field(
         default=None,
@@ -200,3 +205,19 @@ class UserInfo(BaseModel):
     sex: Optional[Sex] = UserFields.sex
     profile_image_url: str | None = UserFields.profile_image_url
     bio: str | None = UserFields.bio
+
+
+class PatchableUserInfo(BaseModel):
+    id: str | None = UserFields.user_id
+    name: str | None = UserFields.name
+    service_email: EmailStr | None = UserFields.service_email
+    urls: list[str] | None = UserFields.urls
+
+    @field_validator("urls", mode="before")
+    def validate_urls(cls, v):
+        if v is None:
+            return v
+        for url in v:
+            if not url.startswith("http"):
+                raise ValueError("URL은 http 또는 https로 시작해야합니다.")
+        return v

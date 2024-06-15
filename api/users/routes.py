@@ -4,16 +4,16 @@ from typing import Annotated
 
 import orjson
 from aiohttp import ClientSession
-from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Path, Query, status
 from fastapi.responses import ORJSONResponse
 
-from api.db.implements.mongo import get_user_by_email, ping
+from api.db.implements.mongo import get_user_by_email, patch_user_by_email, ping
 from api.db.persistant import mongo
 from api.jwt import get_current_user_email_bearer
 from api.settings import env
-from responses.common import custom_response
+from responses.common import BaseModelFactory, custom_response
 from schemas import ResponseModel
-from schemas.users import UserInfo
+from schemas.users import PatchableUserInfo, UserInfo
 
 router = APIRouter(prefix="/users", tags=["user"])
 
@@ -55,5 +55,56 @@ async def get_my_profile(
         content=ResponseModel[None](
             message="사용자 정보를 찾을 수 없습니다.",
             data=None,
+        ),
+    )
+
+
+@router.patch(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "사용자 정보 수정 성공",
+            "model": ResponseModel[UserInfo].inject(
+                message="사용자 정보를 수정 성공",
+                data=UserInfo,
+            ),
+        },
+    },
+)
+async def update_my_profile(
+    user_info: PatchableUserInfo,
+    token_payload=Depends(get_current_user_email_bearer),
+):
+    """
+    로그인한 사용자가 내 정보를 수정할 때 사용해요
+    """
+    okay, user_info_ = await patch_user_by_email(
+        email=token_payload.email,
+        auth_provider=token_payload.auth_provider,
+        user_info=user_info,
+    )
+    if not user_info_:
+        return custom_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ResponseModel[None](
+                message="사용자 정보를 찾을 수 없습니다.",
+                data=None,
+            ),
+        )
+    if not okay:
+        return custom_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=ResponseModel[None](
+                message="사용자 정보를 수정하지 못했습니다. 관리자에게 문의하세요.",
+                data=None,
+            ),
+        )
+
+    return custom_response(
+        status_code=status.HTTP_200_OK,
+        content=ResponseModel[UserInfo](
+            message="사용자 정보를 수정합니다.",
+            data=user_info_,
         ),
     )

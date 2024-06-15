@@ -1,9 +1,11 @@
 import logging
 
+from pymongo import ReturnDocument
+
 from api.db.persistant import mongo as db
 from enums.auth import OAuthProvider
 from schemas.auth import TokenLog
-from schemas.users import UserModel
+from schemas.users import PatchableUserInfo, UserInfo, UserModel
 
 
 async def get_user_by_email(
@@ -19,7 +21,6 @@ async def get_user_by_email(
         )
         if user_from_db is None:
             return None
-            # logging.warning(f"User not found: {email}")
     except Exception as e:
         raise e
     return UserModel(**user_from_db)
@@ -44,6 +45,33 @@ async def add_user(
     except Exception as e:
         raise e
     return True, user
+
+
+# patch user
+async def patch_user_by_email(
+    email: str,
+    auth_provider: OAuthProvider,
+    user_info: PatchableUserInfo,
+) -> tuple[bool, UserInfo | None]:
+    try:
+        user_from_db = await db.users.find_one(
+            {
+                "email": email,
+                "auth_provider": auth_provider,
+            }
+        )
+        if user_from_db is None:
+            return False, None
+        updated_user_info = await db.users.find_one_and_update(
+            {"email": email, "auth_provider": auth_provider},
+            {"$set": user_info.model_dump(exclude_unset=True)},
+            return_document=ReturnDocument.AFTER,
+        )
+        print(f"updated_user_info: {updated_user_info}")
+        return True, UserInfo(**updated_user_info)
+    except Exception as e:
+        logging.exception("Error while patching user: %s", e)
+        return False, None
 
 
 async def add_token_log(payload: TokenLog):
