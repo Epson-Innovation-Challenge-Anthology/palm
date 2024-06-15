@@ -35,6 +35,7 @@ async def add_user(
             {"email": user.email, "auth_provider": user.auth_provider}
         )
         if user_from_db is None:
+            user.service_email = user.email
             await db.users.insert_one(user.model_dump())
         else:
             user = UserModel(**user_from_db)

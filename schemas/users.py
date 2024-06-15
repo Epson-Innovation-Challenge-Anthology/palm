@@ -146,7 +146,7 @@ class UserModel(BaseModel):
     name: str | None = UserFields.name
     auth_provider: OAuthProvider = UserFields.auth_provider
     email: EmailStr = UserFields.email
-    email_newsfeed: EmailStr | None = UserFields.email_newsfeed
+    service_email: EmailStr | None = UserFields.service_email
     is_active: bool = UserFields.is_active
     is_superuser: bool = UserFields.is_superuser
     deactivated_at: Optional[datetime] = UserFields.deactivated_at
@@ -180,7 +180,7 @@ class UserInfo(BaseModel):
     name: str | None = UserFields.name
     auth_provider: OAuthProvider = UserFields.auth_provider
     email: EmailStr = UserFields.email
-    email_newsfeed: EmailStr | None = UserFields.email_newsfeed
+    service_email: EmailStr | None = UserFields.service_email
     is_active: bool = UserFields.is_active
     is_superuser: bool = UserFields.is_superuser
     created_at: datetime = UserFields.created_at
