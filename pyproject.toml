@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "palm"
+version = "0.1.0"
+description = ""
+authors = ["d3fau1t <aciddust20@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+motor = "^3.4.0"
+pydantic = "^2.7.4"
+pydantic-settings = "^2.3.3"
+fastapi = "^0.111.0"
+aiohttp = "^3.9.5"
+async-lru = "^2.0.4"
+boto3 = "^1.34.126"
+redis = "^5.0.6"
+google-api-python-client = "^2.133.0"
+httpx-oauth = "^0.14.1"
+fastapi-users = "^13.0.0"
+beanie = "^1.26.0"
+google-auth = "^2.30.0"
+itsdangerous = "^2.2.0"
+authlib = "^1.3.1"
+uvicorn = "^0.30.1"
+orjson = "^3.10.5"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+isort = "^5.13.2"
+pytest = "^8.2.2"
+pytest-asyncio = "^0.23.7"
+faker = "^25.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["palm"]
+known_third_party = ["fastapi", "aiohttp", "motor", "redis", "pydantic", "pydantic_settings", "async_lru", "boto3", "google_auth", "googleapiclient", "httpx_oauth", "fastapi_users", "beanie", "authlib", "uvicorn", "orjson"]

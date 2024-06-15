@@ -1,0 +1,14 @@
+# user specific files
+DS_Store
+.vscode
+
+# python
+**/__pycache__
+.pytest_cache
+
+# secrets
+.env*
+!.env.example
+secrets
+envs
+playground

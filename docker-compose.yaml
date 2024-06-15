@@ -1,0 +1,61 @@
+version: "3"
+services:
+  palm:
+    image: palm
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "18001:8000"
+    volumes:
+      - ./api:/palm/api
+      - ./enums:/palm/enums
+      - ./schemas:/palm/schemas
+      - ./docs:/palm/docs
+      - ./responses:/palm/responses
+    environment:
+      - PALM_SERVICE_NAME=${PALM_SERVICE_NAME}
+      - PALM_APP_ENVIRONMENT=${PALM_APP_ENVIRONMENT}
+      - PALM_LOG_LEVEL=${PALM_LOG_LEVEL}
+      - PALM_ENABLE_CORS=${PALM_ENABLE_CORS}
+      - PALM_CORS_ORIGINS=${PALM_CORS_ORIGINS}
+      - PALM_MONGO_HOST=${PALM_MONGO_HOST}
+      - PALM_MONGO_PORT=${PALM_MONGO_PORT}
+      - PALM_MONGO_DB=${PALM_MONGO_DB}
+      - PALM_REDIS_HOST=${PALM_REDIS_HOST}
+      - PALM_REDIS_PORT=${PALM_REDIS_PORT}
+      - PALM_REDIS_DB=${PALM_REDIS_DB}
+      - PALM_REDIS_PASSWORD=${PALM_REDIS_PASSWORD}
+      - PALM_REDIS_USERNAME=${PALM_REDIS_USERNAME}
+      - PALM_STORAGE_ACCESS_KEY=${PALM_STORAGE_ACCESS_KEY}
+      - PALM_STORAGE_SECRET_KEY=${PALM_STORAGE_SECRET_KEY}
+      - PALM_STORAGE_BUCKET_NAME=${PALM_STORAGE_BUCKET_NAME}
+      - PALM_STORAGE_ENDPOINT=${PALM_STORAGE_ENDPOINT}
+      - PALM_APP_ACCESS_TOKEN_EXPIRE_MINUTES=${PALM_APP_ACCESS_TOKEN_EXPIRE_MINUTES}
+      - PALM_APP_REFRESH_TOKEN_EXPIRE_MINUTES=${PALM_APP_REFRESH_TOKEN_EXPIRE_MINUTES}
+      - PALM_APP_SECRET=${PALM_APP_SECRET}
+      - PALM_APP_SECRET_ALGO=${PALM_APP_SECRET_ALGO}
+      - PALM_APP_VERSION=${PALM_APP_VERSION}
+      - PALM_FRONTEND_URL=${PALM_FRONTEND_URL}
+      - PALM_GOOGLE_CLIENT_ID=${PALM_GOOGLE_CLIENT_ID}
+      - PALM_GOOGLE_CLIENT_SECRET=${PALM_GOOGLE_CLIENT_SECRET}
+      - PALM_KAKAO_CLIENT_ID=${PALM_KAKAO_CLIENT_ID}
+      - PALM_KAKAO_CLIENT_SECRET=${PALM_KAKAO_CLIENT_SECRET}
+    depends_on:
+      mongodb-palm:
+        condition: service_started
+      redis-palm:
+        condition: service_started
+      minio-palm:
+        condition: service_started
+  proxy-palm:
+    container_name: proxy-palm
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "18000:80"
+    depends_on:
+      - palm

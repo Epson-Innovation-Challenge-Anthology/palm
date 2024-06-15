@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+WORKDIR=$(dirname $(dirname $(readlink -f $0)))
+
+cd $WORKDIR
+if [[ $PALM_APP_ENVIRONMENT = "prod" ]]; then
+    WORKERS=$(nproc)
+    if [[ -z $WORKERS ]]; then
+        WORKERS=2
+    fi
+    poetry run uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers ${WORKERS}
+else
+    poetry run uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+fi

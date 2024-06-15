@@ -1,0 +1,11 @@
+version: "3"
+services:
+  redis-palm:
+      image: redis:6.2.6
+      container_name: redis-palm
+      restart: always
+      command: redis-server --requirepass a1234a --port 6379
+      ports:
+        - "18002:6379"
+      expose:
+        - 36379
