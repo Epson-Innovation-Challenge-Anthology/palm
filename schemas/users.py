@@ -186,7 +186,7 @@ class UserInfo(BaseModel):
     created_at: datetime = UserFields.created_at
     deactivated_at: datetime | None = UserFields.deactivated_at
     updated_at: datetime | None = UserFields.updated_at
-    bio_links: list[str] = UserFields.bio_links
+    urls: list[str] = UserFields.urls
     sex: Optional[Sex] = UserFields.sex
     profile_image_url: str | None = UserFields.profile_image_url
     bio: str | None = UserFields.bio
