@@ -69,11 +69,13 @@ class Settings(BaseSettings):
     app_secret: str = ""
     app_secret_algo: str = "HS256"
     app_version: str = "0.0.1"
+    google_mail_app_password: str = ""  # Google 앱 비밀번호
     frontend_url: str = ""
     google_client_id: str = ""
     google_client_secret: str = ""
     kakao_client_id: str = ""
     kakao_client_secret: str = ""
+    aws_cf_url: str = ""
 
     @classmethod
     def settings_customise_sources(

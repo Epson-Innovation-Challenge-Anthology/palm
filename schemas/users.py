@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import Optional
 
@@ -5,7 +6,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from api.common import generate_hash
 from enums.auth import EventType, GrantType, OAuthProvider
-from enums.users import Sex
+from enums.users import Plan, Sex
 
 __all__ = ("UserFields",)
 
@@ -74,7 +75,7 @@ class UserFields:
         json_schema_extra={"example": "코코팜"},
         max_length=16,
     )
-    profile_image_url = Field(
+    profile_image = Field(
         default=None,
         description="사용자 프로필 사진 URL",
         json_schema_extra={"example": "https://picsum.photos/200/300"},
@@ -98,6 +99,21 @@ class UserFields:
         default=None,
         description="사용자 소개 문구",
         json_schema_extra={"example": "코코팜 맛있다."},
+    )
+    using_plan = Field(
+        default=Plan.BASIC,
+        description="사용중인 서비스 플랜",
+        examples=[Plan.BASIC, Plan.BEGINNER, Plan.EXPERT, Plan.MASTER],
+    )
+    plan_expired_at = Field(
+        default=None,
+        description="서비스 플랜 만료 시점",
+        json_schema_extra={"example": "2024-08-17 19:00:00.000000"},
+    )
+    auto_subscription = Field(
+        default=False,
+        description="플랜 만료시점의 자동 결제 여부",
+        json_schema_extra={"example": False},
     )
 
 
@@ -163,8 +179,11 @@ class UserModel(BaseModel):
     updated_at: datetime | None = UserFields.updated_at
     urls: list[str] = UserFields.urls
     sex: Optional[Sex] = UserFields.sex
-    profile_image_url: str | None = UserFields.profile_image_url
+    profile_image: str | None = UserFields.profile_image
     bio: str | None = UserFields.bio
+    plan_expired_at: Optional[datetime] = UserFields.plan_expired_at
+    using_plan: Plan = UserFields.using_plan
+    auto_subscription: bool = UserFields.auto_subscription
 
     @field_validator("id", mode="before")
     def validate_id(cls, v):
@@ -189,6 +208,23 @@ class UserModel(BaseModel):
             ) from incorrect_date_format
         return v
 
+    @field_validator("using_plan", mode="before")
+    def validate_using_plan(cls, value, values, **kwargs):
+        print(f"{values = }")
+        print(f"{kwargs = }")
+
+        if value is None:
+            return Plan.BASIC
+        if value not in Plan.__members__:
+            logging.exception("Plan이 잘못 입력되었습니다.: %s", value)
+            return Plan.BASIC
+        plan_expired_at = values.data.get("plan_expired_at", None)
+        if plan_expired_at is None:
+            return Plan.BASIC
+        if plan_expired_at < datetime.now():
+            return Plan.BASIC
+        return value
+
 
 class UserInfo(BaseModel):
     id: str = UserFields.user_id
@@ -203,8 +239,29 @@ class UserInfo(BaseModel):
     updated_at: datetime | None = UserFields.updated_at
     urls: list[str] = UserFields.urls
     sex: Optional[Sex] = UserFields.sex
-    profile_image_url: str | None = UserFields.profile_image_url
+    profile_image: str | None = UserFields.profile_image
     bio: str | None = UserFields.bio
+    # 순서 영향받음
+    plan_expired_at: Optional[datetime] = UserFields.plan_expired_at
+    using_plan: Plan = UserFields.using_plan
+    auto_subscription: bool = UserFields.auto_subscription
+
+    @field_validator("using_plan", mode="before")
+    def validate_using_plan(cls, value, values, **kwargs):
+        print(f"{values = }")
+        print(f"{kwargs = }")
+
+        if value is None:
+            return Plan.BASIC
+        if value not in Plan.__members__:
+            logging.exception("Plan이 잘못 입력되었습니다.: %s", value)
+            return Plan.BASIC
+        plan_expired_at = values.data.get("plan_expired_at", None)
+        if plan_expired_at is None:
+            return Plan.BASIC
+        if plan_expired_at < datetime.now():
+            return Plan.BASIC
+        return value
 
 
 class PatchableUserInfo(BaseModel):
@@ -221,3 +278,7 @@ class PatchableUserInfo(BaseModel):
             if not url.startswith("http"):
                 raise ValueError("URL은 http 또는 https로 시작해야합니다.")
         return v
+
+
+class UserProfileImage(BaseModel):
+    profile_image: str = UserFields.profile_image

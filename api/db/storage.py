@@ -6,6 +6,7 @@ import zipfile
 from boto3 import client as boto3_client
 from boto3.session import Session
 from botocore.response import StreamingBody
+from fastapi import UploadFile
 
 logging.basicConfig(level=logging.INFO)
 
@@ -24,11 +25,11 @@ class BucketManager:
 
     def __init__(
         self,
-        access_key: str,
-        secret_key: str,
-        bucket_name: str,
+        access_key: str = "",
+        secret_key: str = "",
+        bucket_name: str = "",
         endpoint_url: str = "",
-        base_path: str = "food-recognition",
+        base_path: str = "",
     ):
         self.access_key = access_key
         self.secret_key = secret_key
@@ -63,9 +64,6 @@ class BucketManager:
     def initialize(self):
         self.client = boto3_client(
             service_name="s3",  # service name
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key,
-            endpoint_url=self.endpoint_url,
         )
         logging.debug("s3 client initialized")
 
@@ -103,6 +101,26 @@ class BucketManager:
             )
         bytes_ = obj["Body"].read()
         return bytes_
+
+    async def upload_file(self, file: UploadFile, filename: str):
+        """
+        파일을 업로드합니다.
+        """
+        key = f"{self.base_path}/{filename}"
+        logging.debug("upload_file: <filename: %s> <key: %s>", filename, key)
+        self.client.upload_fileobj(
+            file.file,
+            self.bucket_name,
+            key,
+        )
+
+    async def remove_file(self, filename: str):
+        key = f"{self.base_path}/{filename}"
+        logging.debug("remove_file: <filename: %s> <key: %s>", filename, key)
+        self.client.delete_object(
+            Bucket=self.bucket_name,
+            Key=key,
+        )
 
 
 def _unzip(zip_file: str):

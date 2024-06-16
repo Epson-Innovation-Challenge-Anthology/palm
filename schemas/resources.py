@@ -71,3 +71,21 @@ class ThemeInput(BaseModel):
         str | None,
         ThemeFields.image_url,
     ]
+
+
+class PictureFields:
+    picture_id = Field(
+        default_factory=lambda: generate_hash(32),
+        description="기본으로 생성되는 사진 ID",
+        json_schema_extra={
+            "example": "a1b2c3d4e5f6g7h8i9j0a1b2c3d4e5f6",
+        },
+        min_length=32,
+        max_length=64,
+    )
+
+
+class ObjectStorageResponse(BaseModel):
+    user_id: str
+    picture_id: str
+    image_url: str

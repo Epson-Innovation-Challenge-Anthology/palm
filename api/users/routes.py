@@ -1,19 +1,16 @@
-import logging
-from collections import defaultdict
 from typing import Annotated
 
-import orjson
-from aiohttp import ClientSession
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Path, Query, status
-from fastapi.responses import ORJSONResponse
+from fastapi import APIRouter, Body, Depends, status
 
-from api.db.implements.mongo import get_user_by_email, patch_user_by_email, ping
-from api.db.persistant import mongo
+from api.db.implements.mongo import (
+    get_user_by_email,
+    patch_user_by_email,
+    patch_user_profile_image,
+)
 from api.jwt import get_current_user_email_bearer
-from api.settings import env
-from responses.common import BaseModelFactory, custom_response
+from responses.common import custom_response
 from schemas import ResponseModel
-from schemas.users import PatchableUserInfo, UserInfo
+from schemas.users import PatchableUserInfo, UserInfo, UserProfileImage
 
 router = APIRouter(prefix="/users", tags=["user"])
 
@@ -106,5 +103,55 @@ async def update_my_profile(
         content=ResponseModel[UserInfo](
             message="사용자 정보를 수정합니다.",
             data=user_info_,
+        ),
+    )
+
+
+@router.patch(
+    "/me/profile-image",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "프로필 이미지 수정 성공",
+            "model": ResponseModel[UserInfo].inject(
+                message="프로필 이미지 수정 성공",
+                data=UserInfo,
+            ),
+        },
+    },
+)
+async def update_my_profile_image(
+    body: Annotated[UserProfileImage, Body(...)],
+    token_payload=Depends(get_current_user_email_bearer),
+):
+    """
+    로그인한 사용자가 프로필 이미지를 수정할 때 사용해요
+    """
+    okay, user_info = await patch_user_profile_image(
+        email=token_payload.email,
+        auth_provider=token_payload.auth_provider,
+        profile_image=body.profile_image,
+    )
+    if not user_info:
+        return custom_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ResponseModel[None](
+                message="사용자 정보를 찾을 수 없습니다.",
+                data=None,
+            ),
+        )
+    if not okay:
+        return custom_response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=ResponseModel[None](
+                message="사용자 정보를 수정하지 못했습니다. 관리자에게 문의하세요.",
+                data=None,
+            ),
+        )
+    return custom_response(
+        status_code=status.HTTP_200_OK,
+        content=ResponseModel[UserInfo](
+            message="사용자 정보를 수정합니다.",
+            data=user_info,
         ),
     )

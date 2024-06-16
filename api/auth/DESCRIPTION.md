@@ -65,7 +65,7 @@ curl -X 'GET' \
     "updated_at": null,
     "bio_links": [],
     "sex": "O",
-    "profile_image_url": null
+    "profile_image": null
   }
 }
 ```

@@ -1,9 +1,11 @@
 import logging
+from datetime import datetime, timedelta
 
 from pymongo import ReturnDocument
 
 from api.db.persistant import mongo as db
 from enums.auth import OAuthProvider
+from enums.users import Plan
 from schemas.auth import TokenLog
 from schemas.users import PatchableUserInfo, UserInfo, UserModel
 
@@ -23,7 +25,8 @@ async def get_user_by_email(
             return None
     except Exception as e:
         raise e
-    return UserModel(**user_from_db)
+    user_model = UserModel(**user_from_db)
+    return user_model
 
 
 # add user
@@ -68,6 +71,64 @@ async def patch_user_by_email(
             return_document=ReturnDocument.AFTER,
         )
         print(f"updated_user_info: {updated_user_info}")
+        return True, UserInfo(**updated_user_info)
+    except Exception as e:
+        logging.exception("Error while patching user: %s", e)
+        return False, None
+
+
+async def patch_user_plan(
+    email: str,
+    auth_provider: OAuthProvider,
+    plan: Plan,
+    month: int,
+) -> tuple[bool, UserInfo | None]:
+    try:
+        user_from_db = await db.users.find_one(
+            {
+                "email": email,
+                "auth_provider": auth_provider,
+            }
+        )
+        if user_from_db is None:
+            return False, None
+
+        plan_expired_at = datetime.now() + timedelta(days=30 * month)
+        updated_user_info = await db.users.find_one_and_update(
+            {"email": email, "auth_provider": auth_provider},
+            {
+                "$set": {
+                    "using_plan": plan,
+                    "plan_expired_at": plan_expired_at,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+        return True, UserInfo(**updated_user_info)
+    except Exception as e:
+        logging.exception("Error while patching user: %s", e)
+        return False, None
+
+
+async def patch_user_profile_image(
+    email: str,
+    auth_provider: OAuthProvider,
+    profile_image: str,
+):
+    try:
+        user_from_db = await db.users.find_one(
+            {
+                "email": email,
+                "auth_provider": auth_provider,
+            }
+        )
+        if user_from_db is None:
+            return False, None
+        updated_user_info = await db.users.find_one_and_update(
+            {"email": email, "auth_provider": auth_provider},
+            {"$set": {"profile_image": profile_image}},
+            return_document=ReturnDocument.AFTER,
+        )
         return True, UserInfo(**updated_user_info)
     except Exception as e:
         logging.exception("Error while patching user: %s", e)
