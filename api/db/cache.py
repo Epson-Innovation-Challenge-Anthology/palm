@@ -36,4 +36,5 @@ class Redis:
         return f"{env.environment}:{namespace}:{key}"
 
 
+# NOTE: 커넥션 비용을 줄이기 위해 싱글톤으로 사용
 redis = Redis()

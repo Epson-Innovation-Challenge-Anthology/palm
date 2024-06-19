@@ -76,6 +76,10 @@ class Settings(BaseSettings):
     kakao_client_id: str = ""
     kakao_client_secret: str = ""
     aws_cf_url: str = ""
+    groq_api_key: str = ""
+    epson_client_id: str = ""
+    epson_client_secret: str = ""
+    epson_email_id: str = ""
 
     @classmethod
     def settings_customise_sources(

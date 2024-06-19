@@ -1,10 +1,12 @@
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Annotated
 
 import aiohttp
+import bcrypt
 from authlib.integrations.starlette_client import OAuth, OAuthError
-from fastapi import Depends, FastAPI, Request, status
+from fastapi import Body, Depends, FastAPI, Form, Request, status
 from fastapi.openapi.utils import get_openapi
 from google.auth.transport import requests
 from google.oauth2 import id_token
@@ -12,7 +14,7 @@ from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
 
 from api.db.cache import redis as cache
-from api.db.implements.mongo import add_token_log, add_user
+from api.db.implements.mongo import add_token_log, add_user, get_user_by_email
 from api.db.implements.redis import AuthManager
 from api.errors import GoogleModuleError, KakaoModuleError
 from api.jwt import (
@@ -25,13 +27,13 @@ from api.jwt import (
 )
 from api.settings import env, get_description
 from enums.auth import AuthMessage, EventType, GrantType, OAuthProvider
-from responses import auth as auth_response
 from responses.common import custom_response
 from schemas import ResponseModel
 from schemas.auth import (
     AccessTokenResponse,
     IDTokenBody,
     RefreshBody,
+    SignupBody,
     TokenLog,
     TokenResponse,
 )
@@ -57,6 +59,19 @@ auth_app = FastAPI(
 async def add_process_time_header(request, call_next):
     response = await call_next(request)
     return response
+
+
+def hash_password(password: str) -> str:
+    password_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password_bytes, salt)
+    return hashed_password.decode("utf-8")
+
+
+def check_password(password: str, hashed_password: str) -> bool:
+    password_bytes = password.encode("utf-8")
+    hashed_password_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(password_bytes, hashed_password_bytes)
 
 
 def custom_openapi():
@@ -877,3 +892,110 @@ async def signin(body: IDTokenBody):
     except Exception as credentials_error:
         logging.exception("credentials error: %s", credentials_error)
         raise CREDENTIALS_EXCEPTION from credentials_error
+
+
+@auth_app.post("/basic/signup", status_code=status.HTTP_200_OK)
+async def basic_signup(body: Annotated[SignupBody, Body(...)]):
+    """
+    회원가입
+    """
+    """
+    기본 회원가입
+
+    response
+    200: 회원가입 성공, 계정 생성됨
+    # NOTE: 도메인 평판작하고 회원가입 인증기능 추가
+    # 202: 회원가입 성공, 이메일인증 필요 (이메일 전송)
+    )
+    400: 이미 있는 계정, 잘못된 요청
+    500: 서버 에러
+    """
+    user_model = await get_user_by_email(
+        auth_provider=OAuthProvider.BASIC,
+        email=body.email,
+    )
+    if user_model:
+        return custom_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ResponseModel(
+                message="이미 있는 계정입니다.",
+                data=None,
+            ),
+        )
+    user_ = UserModel(
+        auth_provider=OAuthProvider.BASIC,
+        email=body.email,
+        service_email=body.email,
+        password=hash_password(body.password),
+        name=body.name,
+        # NOTE: 필요하다면 signup_complete 넣기
+    )
+    await add_user(user=user_)
+
+    return custom_response(
+        status_code=status.HTTP_200_OK,
+        content=ResponseModel(
+            message=AuthMessage.TOKEN_OKAY,
+            data=None,
+        ),
+    )
+
+
+@auth_app.post("/basic/signin", status_code=status.HTTP_200_OK)
+async def basic_signin(
+    email: Annotated[str, Form(...)], password: Annotated[str, Form(...)]
+):
+    user_model = await get_user_by_email(
+        email=email,
+        auth_provider=OAuthProvider.BASIC,
+    )
+    if not user_model:
+        return custom_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ResponseModel(
+                message="계정이 없습니다.",
+                data=None,
+            ),
+        )
+    if not check_password(password, user_model.password or ""):
+        return custom_response(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content=ResponseModel(
+                message="비밀번호가 틀렸습니다.",
+                data=None,
+            ),
+        )
+    access_token_ = create_access_token(email=email, auth_provider=OAuthProvider.BASIC)
+    refresh_token_ = create_refresh_token(
+        email=email, auth_provider=OAuthProvider.BASIC
+    )
+    response_model = TokenResponse(
+        access_token=access_token_,
+        refresh_token=refresh_token_,
+        signup_complete=True,
+    )
+    created_at_ = datetime.now()
+
+    await add_token_log(
+        payload=TokenLog(
+            user_id=user_model.id,
+            event_type=EventType.SIGNIN,
+            access_token=access_token_,
+            refresh_token=refresh_token_,
+            grant_type=GrantType.REFRESH_TOKEN,
+            created_at=created_at_.strftime("%Y-%m-%d %H:%M:%S"),
+            expired_at=(
+                created_at_
+                + timedelta(
+                    minutes=env.app_refresh_token_expire_minutes,
+                )
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+        )
+    )
+    return custom_response(
+        status_code=status.HTTP_200_OK,
+        content=ResponseModel(
+            message=AuthMessage.TOKEN_OKAY,
+            data=response_model,
+        ),
+    )

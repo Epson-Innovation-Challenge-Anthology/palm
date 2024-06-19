@@ -121,7 +121,9 @@ async def update_my_profile(
     },
 )
 async def update_my_profile_image(
-    body: Annotated[UserProfileImage, Body(...)],
+    body: Annotated[
+        UserProfileImage, Body(description="프로필 이미지 수정을 위한 정보 입력")
+    ],
     token_payload=Depends(get_current_user_email_bearer),
 ):
     """

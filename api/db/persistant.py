@@ -34,6 +34,7 @@ def get_mongo_client() -> AsyncIOMotorClient:
             )
 
 
+# NOTE: 커넥션 비용을 줄이기 위해 싱글톤으로 사용
 g_client = get_mongo_client()
 g_client.get_io_loop = asyncio.get_running_loop
 

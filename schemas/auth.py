@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from enums.auth import EventType, GrantType, OAuthProvider, RefreshGrantType
-from schemas.users import AuthFields
+from schemas.users import AuthFields, UserFields
 
 
 class RefreshBody(BaseModel):
@@ -97,3 +97,10 @@ class TokenLog(BaseModel):
     created_at: str | None = AuthFields.created_at
     expired_at: str | None = AuthFields.expires_in
     blacklisted_at: str | None = AuthFields.blacklisted_at
+
+
+class SignupBody(BaseModel):
+    email: str = UserFields.email
+    name: str = UserFields.name
+    password: str = UserFields.password
+    phone_number: str = UserFields.phone_number

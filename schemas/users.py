@@ -28,6 +28,21 @@ class UserFields:
             OAuthProvider.GOOGLE,
         ],
     )
+    password = Field(
+        default=None,
+        description="사용자 비밀번호",
+        json_schema_extra={"example": "Qwer1234!!"},
+        min_length=8,
+    )
+    hashed_password = Field(
+        description="해시된 사용자 비밀번호",
+        json_schema_extra={"example": "190cxzv239we98f9dsv98asd9..."},
+    )
+    phone_number = Field(
+        default=None,
+        description="사용자 전화번호",
+        json_schema_extra={"example": "010-1234-5678"},
+    )
     email = Field(
         description="사용자 이메일",
         json_schema_extra={"example": "cocopalm@gmail.com"},
@@ -172,6 +187,8 @@ class UserModel(BaseModel):
     auth_provider: OAuthProvider = UserFields.auth_provider
     email: EmailStr = UserFields.email
     service_email: EmailStr | None = UserFields.service_email
+    password: str | None = UserFields.hashed_password
+    phone_number: str | None = None
     is_active: bool = UserFields.is_active
     is_superuser: bool = UserFields.is_superuser
     deactivated_at: Optional[datetime] = UserFields.deactivated_at

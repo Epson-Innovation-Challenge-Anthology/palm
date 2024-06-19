@@ -17,3 +17,6 @@ class MESSAGES:
     ALREADY_SUBSCRIBED_PLAN = "이미 구독 중인 플랜입니다."
     UNSUBSCRIBE_SUCCESS = "구독 해지 완료"
     UNSUBSCRIBE_FAIL = "구독 해지 실패, 관리자에게 문의하세요"
+    CHAT_ASK_SUCCESS = "채팅: 메시지 전송 완료"
+    PRINT_ACCEPTED = "프린트 요청이 접수되었습니다."
+    PRINT_FAIL = "프린트 요청 실패, 관리자에게 문의하세요."
