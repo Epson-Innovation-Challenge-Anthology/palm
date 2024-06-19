@@ -37,6 +37,7 @@ class UserFields:
     hashed_password = Field(
         description="해시된 사용자 비밀번호",
         json_schema_extra={"example": "190cxzv239we98f9dsv98asd9..."},
+        default=None,
     )
     phone_number = Field(
         default=None,
