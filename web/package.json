@@ -30,5 +30,12 @@
 		"typescript-eslint": "^8.0.0-alpha.20",
 		"vite": "^5.0.3"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"@types/fabric": "^5.3.7",
+		"autoprefixer": "^10.4.19",
+		"fabric": "^5.3.0",
+		"jspdf": "^2.5.1",
+		"tailwindcss": "^3.4.4"
+	}
 }
