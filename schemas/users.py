@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from api.common import generate_hash
+from api.settings import env
 from enums.auth import EventType, GrantType, OAuthProvider
 from enums.users import Plan, Sex
 
@@ -92,7 +93,7 @@ class UserFields:
         max_length=16,
     )
     profile_image = Field(
-        default=None,
+        default=f"{env.aws_cf_url}/pictures/person.png",
         description="사용자 프로필 사진 URL",
         json_schema_extra={"example": "https://picsum.photos/200/300"},
     )
