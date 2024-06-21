@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Body, Depends, File, Path, UploadFile, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 
 from api.common import generate_hash
 from api.db.implements.mongo import get_user_by_email
@@ -9,7 +7,7 @@ from api.messages import MESSAGES
 from api.resources import services as resource_services
 from responses.common import custom_response
 from schemas import ResponseModel
-from schemas.resources import ObjectStorageResponse, Theme, ThemeInput
+from schemas.resources import ObjectStorageResponse
 
 router = APIRouter(prefix="/picture")
 
@@ -46,9 +44,26 @@ async def upload_picture(
                 data=None,
             ),
         )
+    if not file.content_type:
+        return custom_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ResponseModel[bool](
+                message=MESSAGES.PICTURE_WRONG_FORMAT,
+                data=False,
+            ),
+        )
+    if file.content_type.split("/")[0] != "image":
+        return custom_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=ResponseModel[bool](
+                message=MESSAGES.PICTURE_WRONG_FORMAT,
+                data=False,
+            ),
+        )
+    extension = file.content_type.split("/")[-1]
     okay, response = await resource_services.upload_picture(
         user_id=user_info.id,
-        filename=generate_hash(32),
+        filename=f"{generate_hash(32)}.{extension}",
         file=file,
     )
     if not okay:
@@ -78,23 +93,3 @@ async def upload_picture(
             ),
         ),
     )
-
-
-# @router.delete(
-#     "/{picture_id}",
-#     status_code=status.HTTP_204_NO_CONTENT,
-# )
-# async def remove_picture(
-#     picture_id:
-# ):
-#     """
-#     촬영테마 정보를 삭제할 때 사용해요
-#     """
-#     _ = await resource_services.remove_theme(theme_id)
-#     return custom_response(
-#         status_code=status.HTTP_200_OK,
-#         content=ResponseModel[bool](
-#             message=MESSAGES.THEME_REMOVE_SUCCESS,
-#             data=True,
-#         ),
-#     )

@@ -10,6 +10,7 @@ class MESSAGES:
     PLAN_SUBSCRIBE_FAIL = "구독 신청 실패"
     PLAN_UNCAUGHT_ERROR = "구독 신청 중 오류발생, 관리자에게 문의하세요."
     PICTURE_UPLOADING = "사진정보 업로드 중"
+    PICTURE_WRONG_FORMAT = "사진정보 형식이 잘못되었습니다."
     PICTURE_UPLOAD_FAIL = "사진정보 업로드 실패"
     FORBIDDEN = "권한이 없습니다."
     USER_NOT_FOUND = "사용자 정보가 존재하지 않습니다."

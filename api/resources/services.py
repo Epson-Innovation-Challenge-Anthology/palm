@@ -3,6 +3,7 @@ import logging
 from async_lru import alru_cache  # lru_cache for async
 from fastapi import UploadFile
 
+from api.db.implements.mongo import push_user_picture_id
 from api.db.persistant import mongo
 from api.db.storage import BucketManager
 from api.settings import env
@@ -65,6 +66,10 @@ async def upload_picture(
             await bucket.upload_file(file, filename)
     except Exception as e:
         logging.exception("upload_picture: %s", e)
+        return False, None
+    okay = await push_user_picture_id(user_id, filename)
+    if not okay:
+        # remove uploaded file
         return False, None
     return True, ObjectStorageResponse(
         user_id=user_id,

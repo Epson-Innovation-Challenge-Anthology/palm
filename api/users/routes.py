@@ -8,8 +8,11 @@ from api.db.implements.mongo import (
     patch_user_profile_image,
 )
 from api.jwt import get_current_user_email_bearer
+from api.resources.picture.services import get_user_picture_meta
+from api.settings import env
 from responses.common import custom_response
 from schemas import ResponseModel
+from schemas.pictures import PictureMetaInfo
 from schemas.users import PatchableUserInfo, UserInfo, UserProfileImage
 
 router = APIRouter(prefix="/users", tags=["user"])
@@ -155,5 +158,63 @@ async def update_my_profile_image(
         content=ResponseModel[UserInfo](
             message="사용자 정보를 수정합니다.",
             data=user_info,
+        ),
+    )
+
+
+@router.get(
+    "/me/pictures",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "내 사진 조회 성공",
+            "model": ResponseModel[PictureMetaInfo].inject(
+                message="내 사진 조회 성공",
+                data=PictureMetaInfo,
+            ),
+        },
+    },
+)
+async def get_my_pictures(
+    token_payload=Depends(get_current_user_email_bearer),
+):
+    """
+    로그인한 사용자가 내 사진을 조회할 때 사용해요
+    """
+    user_info = await get_user_by_email(
+        email=token_payload.email,
+        auth_provider=token_payload.auth_provider,
+    )
+    user_id = user_info.id if user_info else None
+    if not user_id:
+        return custom_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ResponseModel[None](
+                message="사용자 정보를 찾을 수 없습니다.",
+                data=None,
+            ),
+        )
+    okay, picture_meta = await get_user_picture_meta(user_id=user_id)
+    if not okay or not picture_meta:
+        return custom_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content=ResponseModel[None](
+                message="사진 정보를 찾을 수 없습니다.",
+                data=None,
+            ),
+        )
+    picture_info = PictureMetaInfo(
+        user_id=picture_meta.user_id,
+        modified_at=picture_meta.modified_at,
+        urls=[
+            f"{env.aws_cf_url}/pictures/{user_id}/{picture_id}"
+            for picture_id in picture_meta.ids
+        ],
+    )
+    return custom_response(
+        status_code=status.HTTP_200_OK,
+        content=ResponseModel[PictureMetaInfo](
+            message="사진 정보를 조회합니다.",
+            data=picture_info,
         ),
     )

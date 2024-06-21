@@ -135,6 +135,43 @@ async def patch_user_profile_image(
         return False, None
 
 
+async def get_user_picture_meta(
+    user_id: str,
+) -> tuple[bool, dict | None]:
+    try:
+        meta_from_db = await db.picture_meta.find_one(
+            {
+                "user_id": user_id,
+            }
+        )
+        if meta_from_db is None:
+            return False, None
+        return True, meta_from_db
+    except Exception as e:
+        logging.exception("Error while getting user picture meta: %s", e)
+        return False, None
+
+
+async def push_user_picture_id(
+    user_id: str,
+    picture_id: str,
+) -> bool:
+    try:
+        await db.picture_meta.update_one(
+            {"user_id": user_id},
+            {
+                "$push": {"ids": picture_id},
+                "$setOnInsert": {"user_id": user_id},
+                "$set": {"modified_at": datetime.now()},
+            },
+            upsert=True,
+        )
+    except Exception as e:
+        logging.exception("Error while pushing user picture id: %s", e)
+        return False
+    return True
+
+
 async def add_token_log(payload: TokenLog):
     try:
         await db.token_logs.insert_one(payload.model_dump())
