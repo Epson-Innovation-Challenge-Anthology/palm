@@ -4,17 +4,15 @@
   import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
   const imageUrls: string[] = [
+    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/84r0sx0ckf0czcog9rr70qiydn3lbnni.gif",
+    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/5rkzeiqtr69quxy4zb93elea90tvgs1t.jpeg",
+    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/hxw6xdsdqc07gi0r652eyqljpe6z2iru.jpeg",
+    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/57kzhv3n97x81iasfaxqjw8imwfk2gnq.jpeg",
+    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/we9j5i83d79ho6t057znz7sbv8mvfqyn.jpeg",
     "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/hfh9zk9rgzy4w47vw8rrn5ik9py4bx6p.jpeg",
     "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/7kgycsgjzhux9xvpmmfv6ixx84m188kf.png",
     "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/f036dy2rc1fr1ng5ks0gm3iltrpnqv1b.jpeg",
     "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/pxyd2l1dvn516iaelsa58jk04ithekbl.jpeg",
-    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/1t1cko42r2ehsvy5a1fn30aex6003ctb.png",
-    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/f036dy2rc1fr1ng5ks0gm3iltrpnqv1b.jpeg",
-    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/pxyd2l1dvn516iaelsa58jk04ithekbl.jpeg",
-    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/1t1cko42r2ehsvy5a1fn30aex6003ctb.png",
-    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/h1cd9qjpm0ictsxqwikwedropqz5zxlx.jpeg",
-    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/pxyd2l1dvn516iaelsa58jk04ithekbl.jpeg",
-    "https://palm-dev.d3fau1t.net/pictures/olq4h60m7yaqbprz/1t1cko42r2ehsvy5a1fn30aex6003ctb.png",
   ];
 
   let container: HTMLDivElement;
