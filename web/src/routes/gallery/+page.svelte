@@ -18,9 +18,13 @@
   let container: HTMLDivElement;
   let controls: PointerLockControls;
   const scene = new THREE.Scene();
+  // 오디오 로더, 리스너 생성
+  let audioLoader: THREE.AudioLoader;
+  let listener: THREE.AudioListener;
+  let footstepWalkingSound: THREE.Audio;
+  let footstepRunningSound: THREE.Audio;
 
   // 키보드 입력 상태 저장
-  // let keyDownTime: { [key: string]: number } = {};
   let keyState: { [key: string]: boolean } = {};
 
 
@@ -66,6 +70,20 @@
     if (keyState['s']) controls.moveForward(-speed);
     if (keyState['d']) controls.moveRight(speed);
 
+    if (keyState['w'] || keyState['a'] || keyState['s'] || keyState['d']) {
+      if (keyState['Shift']) {
+        if (!footstepRunningSound.isPlaying) {
+          footstepRunningSound.play();
+        }
+      } else {
+        if (!footstepWalkingSound.isPlaying) {
+          footstepWalkingSound.play();
+        }
+      }
+    } else {
+      footstepWalkingSound.stop();
+      footstepRunningSound.stop();
+    }
     requestAnimationFrame(updateMovement);
   }
 
@@ -81,6 +99,22 @@
 
 
     // 월드 생성 로직
+    // 사운드 리스너 추가
+    listener = new THREE.AudioListener();
+    audioLoader = new THREE.AudioLoader();
+    footstepRunningSound = new THREE.Audio(listener);
+    footstepWalkingSound = new THREE.Audio(listener);
+    audioLoader.load('/sounds/footstep-walk.wav', (buffer) => {
+      footstepWalkingSound.setBuffer(buffer);
+      footstepWalkingSound.setLoop(true);
+      footstepWalkingSound.setVolume(1.0);
+    })
+    audioLoader.load('/sounds/footstep-run.wav', (buffer) => {
+      footstepRunningSound.setBuffer(buffer);
+      footstepRunningSound.setLoop(true);
+      footstepRunningSound.setVolume(1.0);
+    })
+    camera.add(listener);
     // 나무장판 텍스처 로드
     const textureLoader = new THREE.TextureLoader();
     const floorTexture = textureLoader.load('/images/wood-floor.jpg'); // 나무장판 텍스처 경로로 변경하세요
