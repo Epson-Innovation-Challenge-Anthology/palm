@@ -150,13 +150,20 @@ class Epson:
     async def print_file_by_path(self, file_path: str):
         async with aiohttp.ClientSession() as session:
             access_token, subject_id = await self._authorize(session)
+            if not access_token or not subject_id:
+                logging.exception("Failed to authorize")
+                return False
             job_id, base_uri = await self._create_job(session, access_token, subject_id)
             if not job_id or not base_uri:
+                logging.exception("Failed to create job")
                 return False
             if not await self._upload_file(session, job_id, base_uri, file_path):
+                logging.exception("Failed to upload_file")
                 return False
             if not await self._execute_print(session, subject_id, job_id, access_token):
+                logging.exception("Failed to execute print")
                 return False
+            logging.info("Success to print")
             return True
 
 
@@ -174,7 +181,7 @@ async def test():
     device_id = os.getenv("PALM_EPSON_EMAIL_ID", "")
     handle_id = datetime.now().strftime("%Y%m%d%H%M%S")
     async with Epson(client_id, secret, device_id, handle_id) as epson:
-        await epson.print_file("test.pdf")
+        await epson.print_file_by_path("test.pdf")
 
 
 if __name__ == "__main__":

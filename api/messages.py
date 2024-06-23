@@ -21,3 +21,4 @@ class MESSAGES:
     CHAT_ASK_SUCCESS = "채팅: 메시지 전송 완료"
     PRINT_ACCEPTED = "프린트 요청이 접수되었습니다."
     PRINT_FAIL = "프린트 요청 실패, 관리자에게 문의하세요."
+    PRINT_FILE_NOT_FOUND = "프린트할 파일을 찾을 수 없습니다."
