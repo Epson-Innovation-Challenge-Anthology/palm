@@ -1,6 +1,7 @@
 import logging
 
 from api.db.implements import mongo
+from api.settings import env
 from enums.orbit import DistanceType
 from schemas.orbit import FootPrintBody, OrbitInfo
 
@@ -56,6 +57,8 @@ async def get_user_orbit_info(
             distance=model.distance,
             user_id=model.to_user_id,
             friend_name=orbit_users[i].name or "김앤솔",
+            user_profile_image=orbit_users[i].profile_image
+            or f"{env.aws_cf_url}/pictures/person.png",
             foot_prints=model.foot_prints,
         )
         for i, model in enumerate(orbit_models)

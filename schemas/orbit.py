@@ -23,6 +23,12 @@ class OrbitFields:
         },
         description="사용자 ID",
     )
+    user_profile_image: str = Field(
+        json_schema_extra={
+            "example": "...",
+        },
+        description="프로필 이미지",
+    )
     updated_at: datetime = Field(
         default_factory=datetime.now,
         description="업데이트 일자",
@@ -84,6 +90,7 @@ class OrbitModel(BaseModel):
 class OrbitInfo(BaseModel):
     distance: DistanceType = OrbitFields.distance
     user_id: str = OrbitFields.to_user_id
+    user_profile_image: str = OrbitFields.user_profile_image
     friend_name: str = OrbitFields.friend_name
     updated_at: datetime = OrbitFields.updated_at
     foot_prints: list[FootPrintModel] = Field(
