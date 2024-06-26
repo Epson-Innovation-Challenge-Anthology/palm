@@ -5,8 +5,10 @@ from pymongo import ReturnDocument
 
 from api.db.persistant import mongo as db
 from enums.auth import OAuthProvider
+from enums.orbit import DistanceType
 from enums.users import Plan
 from schemas.auth import TokenLog
+from schemas.orbit import FootPrintBody, FootPrintModel, OrbitModel
 from schemas.users import PatchableUserInfo, UserInfo, UserModel
 
 
@@ -75,6 +77,19 @@ async def patch_user_by_email(
     except Exception as e:
         logging.exception("Error while patching user: %s", e)
         return False, None
+
+
+async def get_user_by_ids(
+    user_ids: list[str],
+) -> tuple[bool, list[UserInfo]]:
+    try:
+        users_from_db = await db.users.find({"id": {"$in": user_ids}}).to_list(None)
+        if users_from_db is None:
+            return False, []
+        return True, [UserInfo(**user) for user in users_from_db]
+    except Exception as e:
+        logging.exception("Error while getting users: %s", e)
+        return False, []
 
 
 async def patch_user_plan(
@@ -168,6 +183,117 @@ async def push_user_picture_id(
         )
     except Exception as e:
         logging.exception("Error while pushing user picture id: %s", e)
+        return False
+    return True
+
+
+async def keep_user_on_track(
+    from_user_id: str,
+    to_user_id: str,
+    distance: DistanceType,
+) -> bool:
+    try:
+        # 만약 이미 로그가 존재한다면 업데이트
+        await db.orbit_logs.find_one_and_update(
+            {
+                "from_user_id": from_user_id,
+                "to_user_id": to_user_id,
+            },
+            {
+                "$set": {
+                    "distance": distance,
+                    "updated_at": datetime.now(),
+                }
+            },
+            upsert=True,
+        )
+    except Exception as e:
+        logging.exception("Error while keeping user on track: %s", e)
+        return False
+    return True
+
+
+async def kick_user_off_track(
+    from_user_id: str,
+    to_user_id: str,
+) -> bool:
+    try:
+        await db.orbit_logs.delete_one(
+            {
+                "from_user_id": from_user_id,
+                "to_user_id": to_user_id,
+            }
+        )
+    except Exception as e:
+        logging.exception("Error while kicking user off track: %s", e)
+        return False
+    return True
+
+
+async def get_user_orbit_models(
+    user_id: str,
+) -> list[OrbitModel]:
+    try:
+        orbit_logs = await db.orbit_logs.find(
+            {
+                "from_user_id": user_id,
+            }
+        ).to_list(None)
+    except Exception as e:
+        logging.exception("Error while getting user orbit logs: %s", e)
+        return []
+    return [OrbitModel(**orbit_log) for orbit_log in orbit_logs]
+
+
+async def add_foot_print(
+    from_user_id: str,
+    to_user_id: str,
+    foot_print: FootPrintBody,
+) -> bool:
+    try:
+        await db.orbit_logs.find_one_and_update(
+            {
+                "from_user_id": from_user_id,
+                "to_user_id": to_user_id,
+            },
+            {
+                # insert foot print
+                "$push": {
+                    "foot_prints": FootPrintModel(
+                        **foot_print.model_dump()
+                    ).model_dump(),
+                },
+            },
+            upsert=True,
+        )
+    except Exception as e:
+        logging.exception("Error while adding foot print: %s", e)
+        return False
+    return True
+
+
+async def remove_foot_print(
+    from_user_id: str,
+    to_user_id: str,
+    foot_print_id: str,
+) -> bool:
+    try:
+        await db.orbit_logs.find_one_and_update(
+            {
+                "from_user_id": from_user_id,
+                "to_user_id": to_user_id,
+            },
+            {
+                # remove foot print
+                "$pull": {
+                    "foot_prints": {
+                        "id": foot_print_id,
+                    }
+                },
+            },
+        )
+    except Exception as e:
+        logging.exception("Error while removing foot print: %s", e)
         return False
     return True
 
